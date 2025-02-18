@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Qubit
 {
-    public class Target : MonoBehaviour
+    public class QubitProperty : MonoBehaviour
     {
         void Start()
         {

@@ -8,9 +8,11 @@ namespace Qubit
     {
         private static GameManager instance = null;
 
-        private Canvas canvas = null;
-        private int targetCnt = 0;
-        private List<Target> qubits = new List<Target>();
+        [SerializeField] GameObject contentObj = null;
+        private GameObject prefab = null;
+        private List<GameObject> qubits = new List<GameObject>();
+
+        public bool bSet = false;
 
         public static GameManager Instance
         {
@@ -56,29 +58,58 @@ namespace Qubit
                 return;
             }
 
-            // Scene 에서 Canvas 탐색
-            canvas = FindAnyObjectByType<Canvas>();
-            if(null == canvas)
+            // Qubit Prefab 
+            prefab = Resources.Load<GameObject>("Prefabs/Qubit");
+            if(null == prefab)
             {
-                Debug.LogError("Scene 에 Canvas 가 존재하지 않습니다. Target 생성이 불가능합니다.");
+                Debug.LogError("Qubit Prefab 을 로드할 수 없습니다.");
                 return;
             }
 
+            // Check Qubit Parent Obj
+            if (contentObj == null)
+            {
+                Debug.LogError("생성될 Qubit 객체의 Content 객체가 설정되지 않았습니다.");
+                return;
+            }
         }
 
-        void SetGame()
+        public void SetGame()
         {
-            if (null == canvas)
+            if (null == prefab || null == contentObj)
             {
                 return;
             }
 
             // 객체 생성 및 Scene 에 배치
+            int columns = 5;
+            int rows = 4;
+            float spacingX = 200f;
+            float spacingY = 200f;
 
+            for (int col = 0; col < columns; col++)
+            {
+                for (int row = 0; row < rows; row++)
+                {
+                    GameObject newObj = Instantiate(prefab, Vector3.zero, Quaternion.identity, contentObj.GetComponent<RectTransform>());
+                    if (col % 2 == 1)
+                    {
+                        float zigzag = 100.0f;
+                        newObj.GetComponent<RectTransform>().localPosition = new Vector3(col * spacingX, -row * spacingY - zigzag, 0);
+                    }
+                    else
+                    {
+                        newObj.GetComponent<RectTransform>().localPosition = new Vector3(col * spacingX, -row * spacingY, 0);
+                    }
+                    qubits.Add(newObj);
+                }
+            }
 
+            /*GameObject qubit = Instantiate(prefab, contentObj.GetComponent<RectTransform>());
             // List 에 객체 추가
+            qubits.Add(qubit);*/
 
-            
+            bSet = true;
         }
 
     }   // class end
