@@ -1,13 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using NUnit.Framework.Internal;
 using UnityEngine;
 
 namespace Qubit
 {
     public enum ViewType
     {
+        TitleView,
         PagingView,
+        GameGuideView,
         GameView,
+        GameEndView,
         MaxCnt,
     }
 
@@ -15,7 +20,12 @@ namespace Qubit
     {
         private ViewManager instance = null;
 
+        ViewType currentViewType;
+        float LoadTitleTimer;
+        int currentEndCount;
         [SerializeField] List<GameObject> views = new List<GameObject>();
+        [SerializeField] float LoadTitleTime;
+        [SerializeField] int endCount;
 
         public ViewManager Instance
         {
@@ -33,6 +43,7 @@ namespace Qubit
                         DontDestroyOnLoad(obj);
                     }
                 }
+
                 return instance;
             }
         }
@@ -41,7 +52,7 @@ namespace Qubit
         {
             if(null == instance)
             {
-                instance = this;
+                instance = this;             
                 DontDestroyOnLoad(gameObject);
             }
             else
@@ -58,6 +69,70 @@ namespace Qubit
                 && false == GameManager.Instance.bSet)
             {
                 GameManager.Instance.SetGame();
+            }
+
+            if (Input.touchCount > 0 || Input.GetMouseButtonDown(0))
+            {
+                LoadTitleTimer = 0;
+                return;
+            }
+
+            LoadTitleTimer += Time.deltaTime;
+
+            if (LoadTitleTimer > LoadTitleTime)
+            {
+                LoadTargetView((int)ViewType.TitleView);
+            }
+        }
+
+        private void LoadTargetView(int ViewIndex) 
+        {
+            for (int i = 0; i < views.Count; i++)
+            {
+                if (ViewIndex == i)
+                {
+                    views[i].gameObject.SetActive(true);
+                    currentViewType = (ViewType)i;
+                }
+                else
+                    views[i].gameObject.SetActive(false);
+            }
+        }
+
+        public void ChangeView(ViewType NewType) 
+        {
+            if (NewType >= ViewType.MaxCnt)
+                return;
+
+            currentViewType = NewType;
+            LoadTargetView((int)currentViewType);
+        }
+
+        public void LoadNextView() 
+        {
+            if (currentViewType >= ViewType.MaxCnt)
+            {
+                currentViewType = ViewType.GameEndView;
+                return;
+            }
+
+            currentViewType++;
+            LoadTargetView((int)currentViewType);
+        }
+
+        public void IncreaseEndCount() 
+        {
+            currentEndCount++;
+
+            if (currentEndCount > endCount) 
+            {
+                currentEndCount = 0;
+
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#else
+                Application.Quit();
+#endif
             }
         }
     }
