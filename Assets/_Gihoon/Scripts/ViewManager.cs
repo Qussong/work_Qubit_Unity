@@ -53,11 +53,19 @@ namespace Qubit
 
         private void Update()
         {
+            // Game Setting
             if (views[(int)ViewType.GameView].activeSelf 
                 && null != GameManager.Instance
                 && false == GameManager.Instance.bSet)
             {
                 GameManager.Instance.SetGame();
+            }
+
+            // Game Progress
+            if (null != GameManager.Instance
+                && true == GameManager.Instance.bSet)
+            {
+                GameManager.Instance.Progress();
             }
         }
     }
