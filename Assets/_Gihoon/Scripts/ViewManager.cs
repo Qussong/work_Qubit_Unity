@@ -24,8 +24,8 @@ namespace Qubit
         float LoadTitleTimer;
         int currentEndCount;
         [SerializeField] List<GameObject> views = new List<GameObject>();
-        [SerializeField] float LoadTitleTime;
-        [SerializeField] int endCount;
+        [SerializeField][Tooltip("(입력 대기 시간) 해당 시간을 넘어서면 Title 화면으로 복귀한다.")] float LoadTitleTime;
+        [SerializeField][Tooltip("강제 종료를 위한 버튼 클릭 횟수")] int endCount;
 
         public ViewManager Instance
         {
@@ -72,13 +72,13 @@ namespace Qubit
                 GameManager.Instance.SetGame();
             }
 
-<<<<<<< HEAD
             // Game Progress
             if (null != GameManager.Instance
                 && true == GameManager.Instance.bSet)
             {
                 GameManager.Instance.Progress();
-=======
+            }
+
             if (Input.touchCount > 0 || Input.GetMouseButtonDown(0))
             {
                 LoadTitleTimer = 0;
@@ -141,7 +141,6 @@ namespace Qubit
 #else
                 Application.Quit();
 #endif
->>>>>>> ffa82d0738933fe3391106606018d683dd48f497
             }
         }
     }
