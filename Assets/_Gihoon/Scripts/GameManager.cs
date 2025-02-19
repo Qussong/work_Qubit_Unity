@@ -20,6 +20,10 @@ namespace Qubit
         private float time = 0.0f;
         private const float GENTERM = 2.0f;
 
+        [Header("Score")]
+        [SerializeField] private int stablePoint = 0;
+        [SerializeField][Tooltip("(게임 종료 조건)게임 종료를 위해 해결해야할 Qubit 개수")] public int endCodition = 10;
+
         public static GameManager Instance
         {
             get 
@@ -46,7 +50,6 @@ namespace Qubit
 
         // MonoBehavior 이기에 생성자는 사용되지 않는다.
         private GameManager() { }
-
         private void Awake()
         {
             // 중복 방지
@@ -121,14 +124,17 @@ namespace Qubit
             for(int i = 0; i < 10; ++i)
             {
                 GameObject newObj = Instantiate(prefab, Vector3.zero, Quaternion.identity, contentObj.GetComponent<RectTransform>());
+                newObj.name = string.Format("Qubit_{0:D2}", i);
                 newObj.GetComponent<RectTransform>().localPosition = Vector3.zero;
                 qubits.Add(newObj);
             }
 
             bSet = true;
         }
+
         public void Progress()
         {
+            EndGame();
             ChangeStateRndQubit();
         }
 
@@ -138,10 +144,8 @@ namespace Qubit
 
             if (time > GENTERM)
             {
-                Debug.Log("Qubit State Change - Start");
-
                 int rndIdx = Random.Range(0, qubits.Count);
-                Debug.Log(rndIdx);
+                //Debug.Log(rndIdx);
 
                 QubitProperty property = qubits[rndIdx].GetComponent<QubitProperty>();
                 if (null != property && EQubitState.Stable == property.QubitState)
@@ -150,8 +154,21 @@ namespace Qubit
                 }
 
                 time = 0.0f;
-                Debug.Log("Qubit State Change - End");
             }
+        }
+
+        public void EndGame()
+        {
+            if(endCodition <= stablePoint)
+            {
+                bSet = false;
+                ViewManager.Instance.LoadNextView();
+            }
+        }
+
+        public int UpSore()
+        {
+            return ++stablePoint;
         }
 
     }   // class end

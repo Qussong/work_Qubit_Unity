@@ -18,7 +18,7 @@ namespace Qubit
 
     public class ViewManager : MonoBehaviour
     {
-        private ViewManager instance = null;
+        private static ViewManager instance = null;
 
         ViewType currentViewType;
         float LoadTitleTimer;
@@ -27,7 +27,7 @@ namespace Qubit
         [SerializeField][Tooltip("(입력 대기 시간) 해당 시간을 넘어서면 Title 화면으로 복귀한다.")] float LoadTitleTime;
         [SerializeField][Tooltip("강제 종료를 위한 버튼 클릭 횟수")] int endCount;
 
-        public ViewManager Instance
+        public static ViewManager Instance
         {
             get
             {
@@ -79,14 +79,15 @@ namespace Qubit
                 GameManager.Instance.Progress();
             }
 
+            // Force quit
             if (Input.touchCount > 0 || Input.GetMouseButtonDown(0))
             {
                 LoadTitleTimer = 0;
                 return;
             }
 
+            // Input waiting time exceeded
             LoadTitleTimer += Time.deltaTime;
-
             if (LoadTitleTimer > LoadTitleTime)
             {
                 LoadTargetView((int)ViewType.TitleView);
@@ -103,10 +104,13 @@ namespace Qubit
                     currentViewType = (ViewType)i;
                 }
                 else
+                {
                     views[i].gameObject.SetActive(false);
+                }
             }
         }
 
+        /*
         public void ChangeView(ViewType NewType) 
         {
             if (NewType >= ViewType.MaxCnt)
@@ -115,6 +119,7 @@ namespace Qubit
             currentViewType = NewType;
             LoadTargetView((int)currentViewType);
         }
+        */
 
         public void LoadNextView() 
         {
