@@ -15,14 +15,14 @@ namespace Qubit
         private GameObject prefab = null;
         private List<GameObject> qubits = new List<GameObject>();
 
-        public bool bSet = false;
+        public bool bSet = false;   // 게임 설정 완료 여부 확인
 
         private float time = 0.0f;
         private const float GENTERM = 2.0f;
 
         [Header("Score")]
         [SerializeField] private int stablePoint = 0;
-        [SerializeField][Tooltip("(게임 종료 조건)게임 종료를 위해 해결해야할 Qubit 개수")] public int endCodition = 10;
+        [SerializeField][Tooltip("(게임 종료 조건)게임 종료를 위해 해결해야할 Qubit 개수")] public int endCodition = 0;
 
         public static GameManager Instance
         {
@@ -134,7 +134,11 @@ namespace Qubit
 
         public void Progress()
         {
-            EndGame();
+            if (endCodition <= stablePoint)
+            {
+                EndGame();
+                ViewManager.Instance.LoadNextView();
+            }
             ChangeStateRndQubit();
         }
 
@@ -159,11 +163,16 @@ namespace Qubit
 
         public void EndGame()
         {
-            if(endCodition <= stablePoint)
+            StopAllCoroutines();
+
+            bSet = false;
+            stablePoint = 0;
+
+            for (int i = 0; i < qubits.Count; ++i)
             {
-                bSet = false;
-                ViewManager.Instance.LoadNextView();
+                Destroy(qubits[i]);
             }
+            qubits.Clear();
         }
 
         public int UpSore()

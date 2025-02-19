@@ -38,7 +38,7 @@ namespace UI
         private Vector2 destPosition;           // 최종적인 스크롤 위치
         private Vector2 initialPosition;        // 자동 스크롤을 시작할 때의 스크롤 위치
         private AnimationCurve animationCurve;  // 자동 스크롤에 관련된 애니메이션 커브
-        private int prevPageIdx = -1;            // 이전 페이지의 인덱스
+        private int prevPageIdx = -1;           // 이전 페이지의 인덱스
         private Rect currentViewRect;           // 스크롤 뷰의 사각형 크기
 
         public RectTransform CachedRectTransform
@@ -50,6 +50,29 @@ namespace UI
         {
             get { return gameObject.GetComponent<ScrollRect>(); }
         }
+
+        void Start()
+        {
+            UpdateView();
+        }
+
+        void LateUpdate()
+        {
+            if (isAnimating)
+            {
+                if (Time.time >= animationCurve.keys[animationCurve.length - 1].time)
+                {
+                    // 애니메이션 커브의 마지막 프레임을 지나가면 애니메이션을 끝낸다.
+                    CachedScrollRect.content.anchoredPosition = destPosition;
+                    isAnimating = false;
+                    return;
+                }
+
+                // 애니메이션 커브를 사용하여 현재 스크롤 위치를 계산해서 스크롤 뷰를 이동시킨다.
+                Vector2 newPosition = initialPosition + (destPosition - initialPosition) * animationCurve.Evaluate(Time.time);
+                CachedScrollRect.content.anchoredPosition = newPosition;
+            }
+        }   // end LateUpdate
 
         // IBeginDragHandler Interface
         // 드래그 시작시 호출
@@ -115,37 +138,8 @@ namespace UI
                 pageControl.SetCurrentPage(pageIdx);
             }
             */
+
         }   // end OnEndDrag
-
-        void Start()
-        {
-            UpdateView();
-
-
-        }   // end Start
-
-        void Update()
-        {
-            
-        }   // end Update
-
-        void LateUpdate()
-        {
-            if(isAnimating)
-            {
-                if(Time.time >= animationCurve.keys[animationCurve.length - 1].time)
-                {
-                    // 애니메이션 커브의 마지막 프레임을 지나가면 애니메이션을 끝낸다.
-                    CachedScrollRect.content.anchoredPosition = destPosition;
-                    isAnimating = false;
-                    return;
-                }
-
-                // 애니메이션 커브를 사용하여 현재 스크롤 위치를 계산해서 스크롤 뷰를 이동시킨다.
-                Vector2 newPosition = initialPosition + (destPosition - initialPosition) * animationCurve.Evaluate(Time.time);
-                CachedScrollRect.content.anchoredPosition = newPosition;
-            }
-        }   // end LateUpdate
 
         // Scroll Content Padding 을 갱신하는 메서드
         private void UpdateView()

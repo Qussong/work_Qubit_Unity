@@ -1578,6 +1578,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   contentObj: {fileID: 41188603}
   bSet: 0
+  stablePoint: 0
+  endCodition: 5
 --- !u!4 &1133262346
 Transform:
   m_ObjectHideFlags: 0
@@ -2001,7 +2003,8 @@ MonoBehaviour:
   - {fileID: 478743827}
   - {fileID: 1123128033}
   - {fileID: 1994149547}
-  LoadTitleTime: 10
+  LoadTitleTimeNoInput: 10
+  LoadTitleTimeOnExit: 5
   endCount: 10
 --- !u!1 &1426853211
 GameObject:

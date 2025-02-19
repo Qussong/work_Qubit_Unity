@@ -24,7 +24,8 @@ namespace Qubit
         float LoadTitleTimer;
         int currentEndCount;
         [SerializeField] List<GameObject> views = new List<GameObject>();
-        [SerializeField][Tooltip("(입력 대기 시간) 해당 시간을 넘어서면 Title 화면으로 복귀한다.")] float LoadTitleTime;
+        [SerializeField][Tooltip("(입력 대기 시간) 해당 시간을 넘어서면 Title 화면으로 복귀한다.")] float LoadTitleTimeNoInput;
+        [SerializeField][Tooltip("컨텐츠 종료시 해당 시간을 넘어서면 Title 화면으로 복귀한다.")] float LoadTitleTimeOnExit;
         [SerializeField][Tooltip("강제 종료를 위한 버튼 클릭 횟수")] int endCount;
 
         public static ViewManager Instance
@@ -64,6 +65,18 @@ namespace Qubit
 
         private void Update()
         {
+            // Return to Title View Condition
+            if (ViewType.GameEndView == currentViewType)
+            {
+                // Content End
+                ReturnToTitleOnExit();
+            }
+            else
+            {
+                // Input waiting time exceeded
+                ReturnToTitleOnNoInput();
+            }
+
             // Game Setting
             if (views[(int)ViewType.GameView].activeSelf 
                 && null != GameManager.Instance
@@ -79,19 +92,6 @@ namespace Qubit
                 GameManager.Instance.Progress();
             }
 
-            // Force quit
-            if (Input.touchCount > 0 || Input.GetMouseButtonDown(0))
-            {
-                LoadTitleTimer = 0;
-                return;
-            }
-
-            // Input waiting time exceeded
-            LoadTitleTimer += Time.deltaTime;
-            if (LoadTitleTimer > LoadTitleTime)
-            {
-                LoadTargetView((int)ViewType.TitleView);
-            }
         }
 
         private void LoadTargetView(int ViewIndex) 
@@ -110,17 +110,6 @@ namespace Qubit
             }
         }
 
-        /*
-        public void ChangeView(ViewType NewType) 
-        {
-            if (NewType >= ViewType.MaxCnt)
-                return;
-
-            currentViewType = NewType;
-            LoadTargetView((int)currentViewType);
-        }
-        */
-
         public void LoadNextView() 
         {
             if (currentViewType >= ViewType.MaxCnt)
@@ -132,7 +121,8 @@ namespace Qubit
             currentViewType++;
             LoadTargetView((int)currentViewType);
         }
-
+        
+        // Call from ExitButton
         public void IncreaseEndCount() 
         {
             currentEndCount++;
@@ -148,5 +138,40 @@ namespace Qubit
 #endif
             }
         }
+
+        private void ReturnToTitleOnNoInput()
+        {
+            // If there is an input value, reset the LoadTitleTimer.
+            if (Input.touchCount > 0 || Input.GetMouseButtonDown(0))
+            {
+                LoadTitleTimer = 0.0f;
+                return;
+            }
+
+            LoadTitleTimer += Time.deltaTime;
+
+            // Return to the title screen if there is no input for a certain period of time.
+            if (LoadTitleTimer > LoadTitleTimeNoInput)
+            {
+                LoadTitleTimer = 0.0f;
+                LoadTargetView((int)ViewType.TitleView);
+                GameManager.Instance.EndGame();
+            }
+        }
+
+        private void ReturnToTitleOnExit()
+        {
+            LoadTitleTimer += Time.deltaTime;
+
+            if (ViewType.GameEndView == currentViewType)
+            {
+                if (LoadTitleTimer > LoadTitleTimeOnExit)
+                {
+                    LoadTitleTimer = 0.0f;
+                    LoadTargetView((int)ViewType.TitleView);
+                }
+            }
+        }
+
     }
 }
