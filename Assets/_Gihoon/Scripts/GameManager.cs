@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using Unity.VisualScripting;
 using UnityEditor;
@@ -9,20 +10,21 @@ namespace Qubit
 {
     public class GameManager : MonoBehaviour
     {
-        private static GameManager instance = null;
-
+        [Header("Essential Settings")]
         [SerializeField] GameObject contentObj = null;
+
+        private static GameManager instance = null;
         private GameObject prefab = null;
         private List<GameObject> qubits = new List<GameObject>();
-
-        public bool bSet = false;   // 게임 설정 완료 여부 확인
-
+        [System.NonSerialized] public bool bSet = false;   // 게임 설정 완료 여부 확인
         private float time = 0.0f;
-        private const float GENTERM = 2.0f;
+        private const float GENTERM = 2.0f; // Unstable Qubit 생성시간 간격
 
         [Header("Score")]
         [SerializeField] private int stablePoint = 0;
         [SerializeField][Tooltip("(게임 종료 조건)게임 종료를 위해 해결해야할 Qubit 개수")] public int endCodition = 0;
+        [SerializeField] int rows = 0;
+        [SerializeField] int cols = 0;
 
         public static GameManager Instance
         {
@@ -90,46 +92,48 @@ namespace Qubit
                 return;
             }
 
-            /*
-            // 객체 생성 및 Scene 에 배치
-            Rect contentSpace = contentObj.GetComponent<RectTransform>().rect;
-            int columns = 5;
-            int rows = 4;
-            float spacingX = contentSpace.width / columns;
-            float spacingY = contentSpace.height / rows;
-            float zigzag = 100.0f;
-
-            for (int col = 0; col < columns; col++)
-            {
-                for (int row = 0; row < rows; row++)
-                {
-                    GameObject newObj = Instantiate(prefab, Vector3.zero, Quaternion.identity, contentObj.GetComponent<RectTransform>());
-                    if (col % 2 == 1)
-                    {
-                        newObj.GetComponent<RectTransform>().localPosition = new Vector3(col * spacingX + spacingX/2, -row * spacingY - spacingY / 2, 0);
-                    }
-                    else
-                    {
-                        newObj.GetComponent<RectTransform>().localPosition = new Vector3(col * spacingX + spacingX / 2, -row * spacingY - spacingY / 2, 0);
-                    }
-
-                    newObj.GetComponent<RectTransform>().localPosition += new Vector3(-contentSpace.width / 2 + spacingX / 2, contentSpace.height / 2 - spacingY / 2, 0);
-
-                    qubits.Add(newObj);
-                }
-            }
-            */
-
-            // Test Code
-            for(int i = 0; i < 10; ++i)
-            {
-                GameObject newObj = Instantiate(prefab, Vector3.zero, Quaternion.identity, contentObj.GetComponent<RectTransform>());
-                newObj.name = string.Format("Qubit_{0:D2}", i);
-                newObj.GetComponent<RectTransform>().localPosition = Vector3.zero;
-                qubits.Add(newObj);
-            }
+            // Qubit 객체 생성 및 배치
+            GenQubit(rows, cols);
 
             bSet = true;
+        }
+
+        void GenQubit(int rowCnt, int colCnt)
+        {
+            Rect contentSpace = contentObj.GetComponent<RectTransform>().rect;
+            float diameter = prefab.GetComponent<RectTransform>().rect.width;
+
+            float spaceX = (contentSpace.width - diameter * colCnt) / (colCnt + 1);
+            float spaceY = diameter;
+
+            float paddingX = (contentSpace.width - spaceX * (colCnt - 1) - diameter * colCnt) / 2;
+            float paddingY = (contentSpace.height - spaceY * (rowCnt - 1) - diameter * rowCnt) / 2;
+
+            float contenOffsetX = -contentSpace.width / 2;
+            float contenOffsetY = contentSpace.height / 2;
+
+            float zigzag = diameter;
+
+            for (int col = 0; col < colCnt; ++col)
+            {
+                for (int row = 0; row < rowCnt; ++row)
+                {
+                    float posX = paddingX + col * (diameter + spaceX) + diameter / 2;
+                    float posY = -paddingY - row * (diameter + spaceY) - diameter / 2;
+
+                    if (col % 2 == 1)
+                    {
+                        posY += zigzag;
+                    }
+
+                    GameObject newQubit = Instantiate(prefab, Vector3.zero, Quaternion.identity, contentObj.GetComponent<RectTransform>());
+                    newQubit.GetComponent<RectTransform>().localPosition = new Vector3(posX, posY, 0.0f);
+                    newQubit.GetComponent<RectTransform>().localPosition += new Vector3(contenOffsetX, contenOffsetY, 0.0f);
+
+                    // 관리 목적
+                    qubits.Add(newQubit);
+                }
+            }
         }
 
         public void Progress()
@@ -139,6 +143,7 @@ namespace Qubit
                 EndGame();
                 ViewManager.Instance.LoadNextView();
             }
+
             ChangeStateRndQubit();
         }
 
@@ -179,6 +184,8 @@ namespace Qubit
         {
             return ++stablePoint;
         }
+
+
 
     }   // class end
 }
